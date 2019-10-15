@@ -476,7 +476,45 @@ var svgTextDrawRectText = function (el, rect, textRect) {
             }
             attr(tspan, 'x', x);
             attr(tspan, 'y', y + i * lineHeight + dy);
-            tspan.appendChild(document.createTextNode(textLines[i]));
+
+            var textLine = textLines[i];
+            var contentBlock = textContain.parseRichText(textLine, style);
+            if (contentBlock.lines.length > 0 && contentBlock.lines[0].tokens) {
+              var tokens = contentBlock.lines[0].tokens;
+
+              for (var j = 0; j < tokens.length; j++) {
+                var token = tokens[j];
+
+                if (token.styleName) {
+                  var subSpan = createElement('tspan');
+                  var subStyle = token.styleName ? style.rich[token.styleName] : undefined;
+                  if (subStyle) {
+                    var subFont = subStyle.font
+                    || [
+                        subStyle.fontStyle || '',
+                        subStyle.fontWeight || '',
+                        subStyle.fontSize || '',
+                        subStyle.fontFamily || ''
+                    ].join(' ');
+
+                    if (subFont) {
+                        subSpan.style.font = subFont;
+                        if (subStyle.textLineHeight) {
+                            var newY = y + i * lineHeight - subStyle.textLineHeight + dy;
+                            attr(tspan, 'y', newY);
+                        }
+                    }
+                    bindStyle(tspan, subStyle, true, subSpan);
+                  }
+
+                  tspan.appendChild(subSpan);
+                  subSpan.appendChild(document.createTextNode(token.text));
+                }
+                else {
+                  tspan.appendChild(document.createTextNode(token.text));
+                }
+              }
+            }
         }
         // Remove unsed tspan elements
         for (; i < tspanList.length; i++) {

@@ -24,6 +24,8 @@ var guid = function () {
  * @desc thanks zepto.
  */
 
+/* global wx */
+
 var env = {};
 
 if (typeof wx === 'object' && typeof wx.getSystemInfoSync === 'function') {
@@ -438,7 +440,9 @@ function inherits(clazz, baseClazz) {
     clazz.prototype = new F();
 
     for (var prop in clazzPrototype) {
-        clazz.prototype[prop] = clazzPrototype[prop];
+        if (clazzPrototype.hasOwnProperty(prop)) {
+            clazz.prototype[prop] = clazzPrototype[prop];
+        }
     }
     clazz.prototype.constructor = clazz;
     clazz.superClass = baseClazz;
@@ -690,6 +694,7 @@ function isDom(value) {
  * @return {boolean}
  */
 function eqNaN(value) {
+    /* eslint-disable-next-line no-self-compare */
     return value !== value;
 }
 
@@ -834,9 +839,11 @@ HashMap.prototype = {
     // should not use the exposed keys, who are prefixed.
     each: function (cb, context) {
         context !== void 0 && (cb = bind(cb, context));
+        /* eslint-disable guard-for-in */
         for (var key in this.data) {
             this.data.hasOwnProperty(key) && cb(this.data[key], key);
         }
+        /* eslint-enable guard-for-in */
     },
     // Do not use this method if performance sensitive.
     removeKey: function (key) {
@@ -905,6 +912,8 @@ var util = (Object.freeze || Object)({
 	concatArray: concatArray,
 	noop: noop
 });
+
+/* global Float32Array */
 
 var ArrayCtor = typeof Float32Array === 'undefined'
     ? Array
@@ -2462,6 +2471,8 @@ mixin(Handler, Draggable);
  * @exports zrender/tool/matrix
  */
 
+/* global Float32Array */
+
 var ArrayCtor$1 = typeof Float32Array === 'undefined'
     ? Array
     : Float32Array;
@@ -3720,11 +3731,17 @@ function lerpNumber(a, b, p) {
 }
 
 function setRgba(out, r, g, b, a) {
-    out[0] = r; out[1] = g; out[2] = b; out[3] = a;
+    out[0] = r;
+    out[1] = g;
+    out[2] = b;
+    out[3] = a;
     return out;
 }
 function copyRgba(out, a) {
-    out[0] = a[0]; out[1] = a[1]; out[2] = a[2]; out[3] = a[3];
+    out[0] = a[0];
+    out[1] = a[1];
+    out[2] = a[2];
+    out[3] = a[3];
     return out;
 }
 
@@ -4799,35 +4816,23 @@ if (typeof window !== 'undefined') {
  */
 
 /**
- * debug日志选项：catchBrushException为true下有效
- * 0 : 不生成debug数据，发布用
- * 1 : 异常抛出，调试用
- * 2 : 控制台输出，调试用
+ * Debug log mode:
+ * 0: Do nothing, for release.
+ * 1: console.error, for debug.
  */
 var debugMode = 0;
 
 // retina 屏幕优化
 var devicePixelRatio = dpr;
 
-var log = function () {
+var logError = function () {
 };
 
 if (debugMode === 1) {
-    log = function () {
-        for (var k in arguments) {
-            throw new Error(arguments[k]);
-        }
-    };
-}
-else if (debugMode > 1) {
-    log = function () {
-        for (var k in arguments) {
-            console.log(arguments[k]);
-        }
-    };
+    logError = console.error;
 }
 
-var zrLog = log;
+var logError$1 = logError;
 
 /**
  * @alias modue:zrender/mixin/Animatable
@@ -4883,7 +4888,7 @@ Animatable.prototype = {
         }
 
         if (!target) {
-            zrLog(
+            logError$1(
                 'Property "'
                 + path
                 + '" is not existed in element '
@@ -6104,7 +6109,10 @@ function TimSort(array, compare) {
         while (stackSize > 1) {
             var n = stackSize - 2;
 
-            if (n >= 1 && runLength[n - 1] <= runLength[n] + runLength[n + 1] || n >= 2 && runLength[n - 2] <= runLength[n] + runLength[n - 1]) {
+            if (
+                (n >= 1 && runLength[n - 1] <= runLength[n] + runLength[n + 1])
+                || (n >= 2 && runLength[n - 2] <= runLength[n] + runLength[n - 1])
+            ) {
                 if (runLength[n - 1] < runLength[n + 1]) {
                     n--;
                 }
@@ -6194,7 +6202,9 @@ function TimSort(array, compare) {
         }
 
         var _minGallop = minGallop;
-        var count1, count2, exit;
+        var count1;
+        var count2;
+        var exit;
 
         while (1) {
             count1 = 0;
@@ -6877,8 +6887,8 @@ Style.prototype = {
     /**
      * `true` is not supported.
      * `false`/`null`/`undefined` are the same.
-     * `false` is used to remove lineDash in some 
-     * case that `null`/`undefined` can not be set. 
+     * `false` is used to remove lineDash in some
+     * case that `null`/`undefined` can not be set.
      * (e.g., emphasis.lineStyle in echarts)
      * @type {Array.<number>|boolean}
      */
@@ -7358,8 +7368,8 @@ var Layer = function (id, painter, dpr) {
         domStyle['user-select'] = 'none';
         domStyle['-webkit-touch-callout'] = 'none';
         domStyle['-webkit-tap-highlight-color'] = 'rgba(0,0,0,0)';
-        domStyle['padding'] = 0;
-        domStyle['margin'] = 0;
+        domStyle['padding'] = 0; // eslint-disable-line dot-notation
+        domStyle['margin'] = 0; // eslint-disable-line dot-notation
         domStyle['border-width'] = 0;
     }
 
@@ -9047,7 +9057,6 @@ RectText.prototype = {
 };
 
 /**
- * 可绘制的图形基类
  * Base class of all displayable graphic objects
  * @module zrender/graphic/Displayable
  */
@@ -9096,16 +9105,15 @@ Displayable.prototype = {
     type: 'displayable',
 
     /**
-     * Displayable 是否为脏，Painter 中会根据该标记判断是否需要是否需要重新绘制
-     * Dirty flag. From which painter will determine if this displayable object needs brush
+     * Dirty flag. From which painter will determine if this displayable object needs brush.
      * @name module:zrender/graphic/Displayable#__dirty
      * @type {boolean}
      */
     __dirty: true,
 
     /**
-     * 图形是否可见，为true时不绘制图形，但是仍能触发鼠标事件
-     * If ignore drawing of the displayable object. Mouse event will still be triggered
+     * Whether the displayable object is visible. when it is true, the displayable object
+     * is not drawn, but the mouse event can still trigger the object.
      * @name module:/zrender/graphic/Displayable#invisible
      * @type {boolean}
      * @default false
@@ -9127,7 +9135,7 @@ Displayable.prototype = {
     z2: 0,
 
     /**
-     * z层level，决定绘画在哪层canvas中
+     * The z level determines the displayable object can be drawn in which layer canvas.
      * @name module:/zrender/graphic/Displayable#zlevel
      * @type {number}
      * @default 0
@@ -9135,7 +9143,7 @@ Displayable.prototype = {
     zlevel: 0,
 
     /**
-     * 是否可拖拽
+     * Whether it can be dragged.
      * @name module:/zrender/graphic/Displayable#draggable
      * @type {boolean}
      * @default false
@@ -9143,7 +9151,7 @@ Displayable.prototype = {
     draggable: false,
 
     /**
-     * 是否正在拖拽
+     * Whether is it dragging.
      * @name module:/zrender/graphic/Displayable#draggable
      * @type {boolean}
      * @default false
@@ -9151,7 +9159,7 @@ Displayable.prototype = {
     dragging: false,
 
     /**
-     * 是否相应鼠标事件
+     * Whether to respond to mouse events.
      * @name module:/zrender/graphic/Displayable#silent
      * @type {boolean}
      * @default false
@@ -9201,21 +9209,20 @@ Displayable.prototype = {
     afterBrush: function (ctx) {},
 
     /**
-     * 图形绘制方法
+     * Graphic drawing method.
      * @param {CanvasRenderingContext2D} ctx
      */
     // Interface
     brush: function (ctx, prevEl) {},
 
     /**
-     * 获取最小包围盒
+     * Get the minimum bounding box.
      * @return {module:zrender/core/BoundingRect}
      */
     // Interface
     getBoundingRect: function () {},
 
     /**
-     * 判断坐标 x, y 是否在图形上
      * If displayable element contain coord x, y
      * @param  {number} x
      * @param  {number} y
@@ -9234,7 +9241,6 @@ Displayable.prototype = {
     },
 
     /**
-     * 判断坐标 x, y 是否在图形的包围盒上
      * If bounding rect of element contain coord x, y
      * @param  {number} x
      * @param  {number} y
@@ -9247,7 +9253,6 @@ Displayable.prototype = {
     },
 
     /**
-     * 标记图形元素为脏，并且在下一帧重绘
      * Mark displayable element dirty and refresh next frame
      */
     dirty: function () {
@@ -9259,11 +9264,10 @@ Displayable.prototype = {
     },
 
     /**
-     * 图形是否会触发事件
      * If displayable object binded any event
      * @return {boolean}
      */
-    // TODO, 通过 bind 绑定的事件
+    // TODO, events bound by bind
     // isSilent: function () {
     //     return !(
     //         this.hoverable || this.draggable
@@ -9485,7 +9489,7 @@ function isDisplayableCulled(el, width, height) {
 
 function isClipPathChanged(clipPaths, prevClipPaths) {
     // displayable.__clipPaths can only be `null`/`undefined` or an non-empty array.
-    if (clipPaths === prevClipPaths) { 
+    if (clipPaths === prevClipPaths) {
         return false;
     }
     if (!clipPaths || !prevClipPaths || (clipPaths.length !== prevClipPaths.length)) {
@@ -10014,12 +10018,12 @@ Painter.prototype = {
         var domRoot = this._domRoot;
 
         if (layersMap[zlevel]) {
-            zrLog('ZLevel ' + zlevel + ' has been used already');
+            logError$1('ZLevel ' + zlevel + ' has been used already');
             return;
         }
         // Check if is a valid layer
         if (!isLayerValid(layer)) {
-            zrLog('Layer of zlevel ' + zlevel + ' is not valid');
+            logError$1('Layer of zlevel ' + zlevel + ' is not valid');
             return;
         }
 
@@ -10153,11 +10157,14 @@ Painter.prototype = {
                 incrementalLayerCount = 1;
             }
             else {
-                layer = this.getLayer(zlevel + (incrementalLayerCount > 0 ? EL_AFTER_INCREMENTAL_INC : 0), this._needsManuallyCompositing);
+                layer = this.getLayer(
+                    zlevel + (incrementalLayerCount > 0 ? EL_AFTER_INCREMENTAL_INC : 0),
+                    this._needsManuallyCompositing
+                );
             }
 
             if (!layer.__builtin__) {
-                zrLog('ZLevel ' + zlevel + ' has been used by unkown layer ' + layer.id);
+                logError$1('ZLevel ' + zlevel + ' has been used by unkown layer ' + layer.id);
             }
 
             if (layer !== prevLayer) {
@@ -12237,6 +12244,8 @@ function fromArc(
 
 // TODO getTotalLength, getPointAtLength
 
+/* global Float32Array */
+
 var CMD = {
     M: 1,
     L: 2,
@@ -12908,9 +12917,12 @@ PathProxy.prototype = {
      */
     rebuildPath: function (ctx) {
         var d = this.data;
-        var x0, y0;
-        var xi, yi;
-        var x, y;
+        var x0;
+        var y0;
+        var xi;
+        var yi;
+        var x;
+        var y;
         var ux = this._ux;
         var uy = this._uy;
         var len$$1 = this._len;
@@ -16895,18 +16907,20 @@ function pathDataToString(path) {
 
                 var dThetaPositive = Math.abs(dTheta);
                 var isCircle = isAroundZero$1(dThetaPositive - PI2$4)
-                    && !isAroundZero$1(dThetaPositive);
+                    || (clockwise ? dTheta >= PI2$4 : -dTheta >= PI2$4);
+
+                // Mapping to 0~2PI
+                var unifiedTheta = dTheta > 0 ? dTheta % PI2$4 : (dTheta % PI2$4 + PI2$4);
 
                 var large = false;
-                if (dThetaPositive >= PI2$4) {
+                if (isCircle) {
                     large = true;
                 }
                 else if (isAroundZero$1(dThetaPositive)) {
                     large = false;
                 }
                 else {
-                    large = (dTheta > -PI$3 && dTheta < 0 || dTheta > PI$3)
-                        === !!clockwise;
+                    large = (unifiedTheta >= PI$3) === !!clockwise;
                 }
 
                 var x0 = round4(cx + rx * mathCos$3(theta));
@@ -17101,14 +17115,15 @@ var svgTextDrawRectText = function (el, rect, textRect) {
 
     textRect = getBoundingRect(
         text, font, align,
-        verticalAlign, style.textPadding, style.textLineHeight
+        verticalAlign, style.textPadding, style.textLineHeight,
+        false, style.truncate
     );
 
     var lineHeight = textRect.lineHeight;
     // Text position represented by coord
     if (textPosition instanceof Array) {
-        x = rect.x + textPosition[0];
-        y = rect.y + textPosition[1];
+        x = rect.x + parsePercent(textPosition[0], rect.width);
+        y = rect.y + parsePercent(textPosition[1], rect.height);
     }
     else {
         var newPos = el.calculateTextPosition
@@ -17170,7 +17185,10 @@ var svgTextDrawRectText = function (el, rect, textRect) {
         setTransform(textSvgEl, transform);
     }
 
-    var textLines = text.split('\n');
+    var contentBlock = parsePlainText(
+        text, font, textPadding, lineHeight, style.truncate);
+
+    var textLines = contentBlock.lines;
     var nTextLines = textLines.length;
     var textAnchor = align;
     // PENDING
@@ -17218,7 +17236,45 @@ var svgTextDrawRectText = function (el, rect, textRect) {
             }
             attr(tspan, 'x', x);
             attr(tspan, 'y', y + i * lineHeight + dy);
-            tspan.appendChild(document.createTextNode(textLines[i]));
+
+            var textLine = textLines[i];
+            var contentBlock = parseRichText(textLine, style);
+            if (contentBlock.lines.length > 0 && contentBlock.lines[0].tokens) {
+              var tokens = contentBlock.lines[0].tokens;
+
+              for (var j = 0; j < tokens.length; j++) {
+                var token = tokens[j];
+
+                if (token.styleName) {
+                  var subSpan = createElement('tspan');
+                  var subStyle = token.styleName ? style.rich[token.styleName] : undefined;
+                  if (subStyle) {
+                    var subFont = subStyle.font
+                    || [
+                        subStyle.fontStyle || '',
+                        subStyle.fontWeight || '',
+                        subStyle.fontSize || '',
+                        subStyle.fontFamily || ''
+                    ].join(' ');
+
+                    if (subFont) {
+                        subSpan.style.font = subFont;
+                        if (subStyle.textLineHeight) {
+                            var newY = y + i * lineHeight - subStyle.textLineHeight + dy;
+                            attr(tspan, 'y', newY);
+                        }
+                    }
+                    bindStyle(tspan, subStyle, true, subSpan);
+                  }
+
+                  tspan.appendChild(subSpan);
+                  subSpan.appendChild(document.createTextNode(token.text));
+                }
+                else {
+                  tspan.appendChild(document.createTextNode(token.text));
+                }
+              }
+            }
         }
         // Remove unsed tspan elements
         for (; i < tspanList.length; i++) {
@@ -17791,7 +17847,7 @@ GradientManager.prototype.add = function (gradient) {
         dom = this.createElement('radialGradient');
     }
     else {
-        zrLog('Illegal gradient type.');
+        logError$1('Illegal gradient type.');
         return null;
     }
 
@@ -17856,7 +17912,7 @@ GradientManager.prototype.updateDom = function (gradient, dom) {
         dom.setAttribute('r', gradient.r);
     }
     else {
-        zrLog('Illegal gradient type.');
+        logError$1('Illegal gradient type.');
         return;
     }
 
@@ -18234,7 +18290,10 @@ ShadowManager.prototype.updateDom = function (displayable, dom) {
     var scaleY = displayable.scale ? (displayable.scale[1] || 1) : 1;
 
     // TODO: textBoxShadowBlur is not supported yet
-    var offsetX, offsetY, blur, color;
+    var offsetX;
+    var offsetY;
+    var blur;
+    var color;
     if (style.shadowBlur || style.shadowOffsetX || style.shadowOffsetY) {
         offsetX = style.shadowOffsetX || 0;
         offsetY = style.shadowOffsetY || 0;
@@ -18340,6 +18399,12 @@ function prepend(parent, child) {
             : parent.appendChild(child);
     }
 }
+
+// function append(parent, child) {
+//     if (checkParentAvailable(parent, child)) {
+//         parent.appendChild(child);
+//     }
+// }
 
 function remove(parent, child) {
     if (child && parent && child.parentNode === parent) {
@@ -18519,11 +18584,9 @@ SVGPainter.prototype = {
             else if (!item.removed) {
                 for (var k = 0; k < item.count; k++) {
                     var displayable = newVisibleList[item.indices[k]];
-                    prevSvgElement =
-                        svgElement =
-                        getTextSvgElement(displayable)
-                        || getSvgElement(displayable)
-                        || prevSvgElement;
+                    prevSvgElement = getTextSvgElement(displayable)
+                        || getSvgElement(displayable) || prevSvgElement;
+                    svgElement = getSvgElement(displayable) || getTextSvgElement(displayable);
 
                     this.gradientManager.markUsed(displayable);
                     this.gradientManager
@@ -18672,7 +18735,7 @@ SVGPainter.prototype = {
 // Not supported methods
 function createMethodNotSupport(method) {
     return function () {
-        zrLog('In SVG mode painter not support method "' + method + '"');
+        logError$1('In SVG mode painter not support method "' + method + '"');
     };
 }
 
@@ -18768,7 +18831,7 @@ if (!env$1.canvasSupported) {
         return 'rgb(' + [r, g, b].join(',') + ')';
     };
 
-    var append$1 = function (parent, child) {
+    var append = function (parent, child) {
         if (child && parent && child.parentNode !== parent) {
             parent.appendChild(child);
         }
@@ -18964,7 +19027,7 @@ if (!env$1.canvasSupported) {
             }
 
             isFill ? updateFillNode(el, style, zrEl) : updateStrokeNode(el, style);
-            append$1(vmlEl, el);
+            append(vmlEl, el);
         }
         else {
             vmlEl[isFill ? 'filled' : 'stroked'] = 'false';
@@ -19216,7 +19279,7 @@ if (!env$1.canvasSupported) {
         vmlEl.style.zIndex = getZIndex(this.zlevel, this.z, this.z2);
 
         // Append to root
-        append$1(vmlRoot, vmlEl);
+        append(vmlRoot, vmlEl);
 
         // Text
         if (style.text != null) {
@@ -19233,7 +19296,7 @@ if (!env$1.canvasSupported) {
     };
 
     Path.prototype.onAdd = function (vmlRoot) {
-        append$1(vmlRoot, this._vmlEl);
+        append(vmlRoot, this._vmlEl);
         this.appendRectText(vmlRoot);
     };
 
@@ -19445,7 +19508,7 @@ if (!env$1.canvasSupported) {
         vmlEl.style.zIndex = getZIndex(this.zlevel, this.z, this.z2);
 
         // Append to root
-        append$1(vmlRoot, vmlEl);
+        append(vmlRoot, vmlEl);
 
         // Text
         if (style.text != null) {
@@ -19464,7 +19527,7 @@ if (!env$1.canvasSupported) {
     };
 
     ZImage.prototype.onAdd = function (vmlRoot) {
-        append$1(vmlRoot, this._vmlEl);
+        append(vmlRoot, this._vmlEl);
         this.appendRectText(vmlRoot);
     };
 
@@ -19685,9 +19748,9 @@ if (!env$1.canvasSupported) {
             textVmlEl.from = '0 0';
             textVmlEl.to = '1000 0.05';
 
-            append$1(textVmlEl, skewEl);
-            append$1(textVmlEl, pathEl);
-            append$1(textVmlEl, textPathEl);
+            append(textVmlEl, skewEl);
+            append(textVmlEl, pathEl);
+            append(textVmlEl, textPathEl);
 
             this._textVmlEl = textVmlEl;
         }
@@ -19744,7 +19807,7 @@ if (!env$1.canvasSupported) {
         textVmlEl.style.zIndex = getZIndex(this.zlevel, this.z, this.z2);
 
         // Attached to root
-        append$1(vmlRoot, textVmlEl);
+        append(vmlRoot, textVmlEl);
     };
 
     var removeRectText = function (vmlRoot) {
@@ -19753,7 +19816,7 @@ if (!env$1.canvasSupported) {
     };
 
     var appendRectText = function (vmlRoot) {
-        append$1(vmlRoot, this._textVmlEl);
+        append(vmlRoot, this._textVmlEl);
     };
 
     var list = [RectText, Displayable, ZImage, Path, Text];
@@ -19973,7 +20036,7 @@ VMLPainter.prototype = {
 // Not supported methods
 function createMethodNotSupport$1(method) {
     return function () {
-        zrLog('In IE8.0 VML mode painter not support method "' + method + '"');
+        logError$1('In IE8.0 VML mode painter not support method "' + method + '"');
     };
 }
 
