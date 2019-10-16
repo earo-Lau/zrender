@@ -500,8 +500,8 @@ var svgTextDrawRectText = function (el, rect, textRect) {
                     if (subFont) {
                         subSpan.style.font = subFont;
                         if (subStyle.textLineHeight) {
-                            var newY = y + i * lineHeight - subStyle.textLineHeight + dy;
-                            attr(tspan, 'y', newY);
+                            var refY = tspan.getAttribute('y');
+                            attr(subSpan, 'y', refY - subStyle.textLineHeight);
                         }
                     }
                     bindStyle(tspan, subStyle, true, subSpan);
