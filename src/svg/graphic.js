@@ -502,7 +502,7 @@ var svgTextDrawRectText = function (el, rect, textRect) {
                         if (subStyle.textLineHeight) {
                             var refY = tspan.getAttribute('y');
                             attr(subSpan, 'x', x);
-                            attr(subSpan, 'y', refY - subStyle.textLineHeight);
+                            attr(subSpan, 'y', Number(refY) - subStyle.textLineHeight);
                         }
                     }
                     bindStyle(tspan, subStyle, true, subSpan);
