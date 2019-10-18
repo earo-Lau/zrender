@@ -2,13 +2,14 @@
 // 1. shadow
 // 2. Image: sx, sy, sw, sh
 
-import {createElement} from './core';
+import { createElement } from './core';
 import PathProxy from '../core/PathProxy';
 import BoundingRect from '../core/BoundingRect';
 import * as matrix from '../core/matrix';
 import * as textContain from '../contain/text';
 import * as textHelper from '../graphic/helper/text';
 import Text from '../graphic/Text';
+import env from '../core/env';
 
 var CMD = PathProxy.CMD;
 var arrayJoin = Array.prototype.join;
@@ -218,7 +219,7 @@ function pathDataToString(path) {
 }
 
 var svgPath = {};
-export {svgPath as path};
+export { svgPath as path };
 
 svgPath.brush = function (el) {
     var style = el.style;
@@ -260,7 +261,7 @@ svgPath.brush = function (el) {
  * IMAGE
  **************************************************/
 var svgImage = {};
-export {svgImage as image};
+export { svgImage as image };
 
 svgImage.brush = function (el) {
     var style = el.style;
@@ -309,7 +310,7 @@ svgImage.brush = function (el) {
  * TEXT
  **************************************************/
 var svgText = {};
-export {svgText as text};
+export { svgText as text };
 var tmpRect = new BoundingRect();
 var tmpTextPositionResult = {};
 
@@ -481,44 +482,49 @@ var svgTextDrawRectText = function (el, rect, textRect) {
             attr(tspan, 'x', x);
             attr(tspan, 'y', y + i * lineHeight + dy);
 
+            // IE offset
+            if (env.browser.ie || env.browser.edge) {
+                attr(tspan, 'dy', '0.5em');
+            }
+
             var textLine = textLines[i];
             var contentBlock = textContain.parseRichText(textLine, style);
             if (contentBlock.lines.length > 0 && contentBlock.lines[0].tokens) {
-              var tokens = contentBlock.lines[0].tokens;
+                var tokens = contentBlock.lines[0].tokens;
 
-              for (var j = 0; j < tokens.length; j++) {
-                var token = tokens[j];
+                for (var j = 0; j < tokens.length; j++) {
+                    var token = tokens[j];
 
-                if (token.styleName) {
-                  var subSpan = createElement('tspan');
-                  var subStyle = token.styleName ? style.rich[token.styleName] : undefined;
-                  if (subStyle) {
-                    var subFont = subStyle.font
-                    || [
-                        subStyle.fontStyle || '',
-                        subStyle.fontWeight || '',
-                        subStyle.fontSize || '',
-                        subStyle.fontFamily || ''
-                    ].join(' ');
+                    if (token.styleName) {
+                        var subSpan = createElement('tspan');
+                        var subStyle = token.styleName ? style.rich[token.styleName] : undefined;
+                        if (subStyle) {
+                            var subFont = subStyle.font
+                                || [
+                                    subStyle.fontStyle || '',
+                                    subStyle.fontWeight || '',
+                                    subStyle.fontSize || '',
+                                    subStyle.fontFamily || ''
+                                ].join(' ');
 
-                    if (subFont) {
-                        subSpan.style.font = subFont;
-                        if (subStyle.textLineHeight) {
-                            var refY = tspan.getAttribute('y');
-                            attr(subSpan, 'x', x);
-                            attr(subSpan, 'y', Number(refY) - subStyle.textLineHeight);
+                            if (subFont) {
+                                subSpan.style.font = subFont;
+                                if (subStyle.textLineHeight) {
+                                    var refY = tspan.getAttribute('y');
+                                    attr(subSpan, 'x', x);
+                                    attr(subSpan, 'y', Number(refY) - subStyle.textLineHeight);
+                                }
+                            }
+                            bindStyle(tspan, subStyle, true, subSpan);
                         }
-                    }
-                    bindStyle(tspan, subStyle, true, subSpan);
-                  }
 
-                  tspan.appendChild(subSpan);
-                  subSpan.appendChild(document.createTextNode(token.text));
+                        tspan.appendChild(subSpan);
+                        subSpan.appendChild(document.createTextNode(token.text));
+                    }
+                    else {
+                        tspan.appendChild(document.createTextNode(token.text));
+                    }
                 }
-                else {
-                  tspan.appendChild(document.createTextNode(token.text));
-                }
-              }
             }
         }
         // Remove unsed tspan elements
