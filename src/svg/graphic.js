@@ -473,6 +473,10 @@ var svgTextDrawRectText = function (el, rect, textRect) {
             }
             else {
                 tspan.innerHTML = '';
+                // Remove childNode for IE 11
+                while (tspan.childNodes.length > 0) {
+                    tspan.removeChild(tspan.lastChild);
+                }
             }
             attr(tspan, 'x', x);
             attr(tspan, 'y', y + i * lineHeight + dy);
