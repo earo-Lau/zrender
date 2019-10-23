@@ -10849,7 +10849,7 @@ var domHandlers = {
 
         this._lastTouchMoment = new Date();
 
-        this.handler.processGesture(this, event, 'start');
+        this.handler.processGesture(event, 'start');
 
         // In touch device, trigger `mousemove`(`mouseover`) should
         // be triggered, and must before `mousedown` triggered.
@@ -10873,7 +10873,7 @@ var domHandlers = {
         // mouse event in upper applicatoin.
         event.zrByTouch = true;
 
-        this.handler.processGesture(this, event, 'change');
+        this.handler.processGesture(event, 'change');
 
         // Mouse move should always be triggered no matter whether
         // there is gestrue event, because mouse move and pinch may
@@ -10896,7 +10896,7 @@ var domHandlers = {
         // mouse event in upper applicatoin.
         event.zrByTouch = true;
 
-        this.handler.processGesture(this, event, 'end');
+        this.handler.processGesture(event, 'end');
 
         domHandlers.mouseup.call(this, event);
 
@@ -11103,7 +11103,7 @@ var instances = {};    // ZRender实例map索引
 /**
  * @type {string}
  */
-var version = '4.1.0';
+var version = '4.1.1';
 
 /**
  * Initializing a zrender instance
@@ -17233,47 +17233,57 @@ var svgTextDrawRectText = function (el, rect, textRect) {
             }
             else {
                 tspan.innerHTML = '';
+                // Remove childNode for IE 11
+                while (tspan.childNodes.length > 0) {
+                    tspan.removeChild(tspan.lastChild);
+                }
             }
             attr(tspan, 'x', x);
             attr(tspan, 'y', y + i * lineHeight + dy);
 
+            // IE offset
+            if (env$1.browser.ie || env$1.browser.edge) {
+                attr(tspan, 'dy', '0.5em');
+            }
+
             var textLine = textLines[i];
             var contentBlock = parseRichText(textLine, style);
             if (contentBlock.lines.length > 0 && contentBlock.lines[0].tokens) {
-              var tokens = contentBlock.lines[0].tokens;
+                var tokens = contentBlock.lines[0].tokens;
 
-              for (var j = 0; j < tokens.length; j++) {
-                var token = tokens[j];
+                for (var j = 0; j < tokens.length; j++) {
+                    var token = tokens[j];
 
-                if (token.styleName) {
-                  var subSpan = createElement('tspan');
-                  var subStyle = token.styleName ? style.rich[token.styleName] : undefined;
-                  if (subStyle) {
-                    var subFont = subStyle.font
-                    || [
-                        subStyle.fontStyle || '',
-                        subStyle.fontWeight || '',
-                        subStyle.fontSize || '',
-                        subStyle.fontFamily || ''
-                    ].join(' ');
+                    if (token.styleName) {
+                        var subSpan = createElement('tspan');
+                        var subStyle = token.styleName ? style.rich[token.styleName] : undefined;
+                        if (subStyle) {
+                            var subFont = subStyle.font
+                                || [
+                                    subStyle.fontStyle || '',
+                                    subStyle.fontWeight || '',
+                                    subStyle.fontSize || '',
+                                    subStyle.fontFamily || ''
+                                ].join(' ');
 
-                    if (subFont) {
-                        subSpan.style.font = subFont;
-                        if (subStyle.textLineHeight) {
-                            var newY = y + i * lineHeight - subStyle.textLineHeight + dy;
-                            attr(tspan, 'y', newY);
+                            if (subFont) {
+                                subSpan.style.font = subFont;
+                                if (subStyle.textLineHeight) {
+                                    var refY = tspan.getAttribute('y');
+                                    attr(subSpan, 'x', x);
+                                    attr(subSpan, 'y', Number(refY) - subStyle.textLineHeight);
+                                }
+                            }
+                            bindStyle(tspan, subStyle, true, subSpan);
                         }
-                    }
-                    bindStyle(tspan, subStyle, true, subSpan);
-                  }
 
-                  tspan.appendChild(subSpan);
-                  subSpan.appendChild(document.createTextNode(token.text));
+                        tspan.appendChild(subSpan);
+                        subSpan.appendChild(document.createTextNode(token.text));
+                    }
+                    else {
+                        tspan.appendChild(document.createTextNode(token.text));
+                    }
                 }
-                else {
-                  tspan.appendChild(document.createTextNode(token.text));
-                }
-              }
             }
         }
         // Remove unsed tspan elements

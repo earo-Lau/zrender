@@ -11,7 +11,6 @@
     "url": "https://github.com/ecomfe/zrender.git"
   },
   "scripts": {
-    "postinstall": "node build/build.js --prepublish",
     "prepublish": "node build/build.js --prepublish",
     "build": "node build/build.js --release",
     "dev": "node build/build.js --watch",
@@ -19,7 +18,7 @@
     "lint": "./node_modules/.bin/eslint src"
   },
   "license": "BSD-3-Clause",
-  "dependencies": {
+  "devDependencies": {
     "@babel/core": "7.3.4",
     "@babel/helper-module-transforms": "7.2.2",
     "@babel/helper-simple-access": "7.1.0",

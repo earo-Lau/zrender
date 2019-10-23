@@ -162,5 +162,5 @@ pip-log.txt
 .DS_Store
 
 
-/lib
+# /lib
 node_modules
