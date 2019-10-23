@@ -12,6 +12,7 @@
   },
   "scripts": {
     "prepare": "node build/build.js --prepublish",
+    "prepublish": "node build/build.js --prepublish",
     "build": "node build/build.js --release",
     "dev": "node build/build.js --watch",
     "test": "node build/build.js",
