@@ -11,7 +11,7 @@
     "url": "https://github.com/ecomfe/zrender.git"
   },
   "scripts": {
-    "postinstall": "node build/build.js --prepubish",
+    "postinstall": "node build/build.js --prepublish",
     "prepublish": "node build/build.js --prepublish",
     "build": "node build/build.js --release",
     "dev": "node build/build.js --watch",
